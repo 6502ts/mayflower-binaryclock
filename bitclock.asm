@@ -1,5 +1,6 @@
 	processor 6502
 	include ../vcs.h
+	include ../macro.h
 	org $F000
 
 Start
@@ -21,14 +22,36 @@ ClearMem
 	STA COLUBK	
 	LDA #$57
 	STA COLUP0
+	LDA #$67
+	STA COLUP1
     LDA #%10101010
     STA GRP0
-    LDA #$07
+    STA GRP1
+    LDA #$67
     STA NUSIZ0
+    STA NUSIZ1
+
+    LDA #02
+    STA ENAM0
+    STA ENAM1
 
     STA WSYNC
+
+    STA RESM0
+    STA RESM1
+
+    Sleep 20
+    STA RESM0
+    STA RESM1
+
+    NOP
+    NOP
+
     STA RESP0
 
+    Sleep 12
+
+    STA RESP1
 MainLoop
     LDA #$02
     STA VSYNC
