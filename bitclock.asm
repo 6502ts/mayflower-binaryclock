@@ -25,6 +25,12 @@ ClearMem
 	BNE ClearMem
 
 ;;; Setup Players
+    LDA #15
+    STA hours
+    LDA #23
+    STA minutes
+    LDA #31
+    STA seconds
 
 	LDA #$00		
 	STA COLUBK	
@@ -61,11 +67,7 @@ ClearMem
 
     STA RESP0
 MainLoop
-    LDA seconds
-    STA GRP0
-    LDA minutes
-    STA GRP1
-
+ 
     LDA #$02
     STA VSYNC
     
@@ -84,9 +86,22 @@ VBankLoop
     DEX
     BNE VBankLoop
 
-    LDX #228 ;; 228 
     LDA #$00
     STA VBLANK
+
+    LDA #$FF
+    STA GRP0
+    STA GRP1
+    STA WSYNC
+    STA WSYNC
+    STA WSYNC
+
+    LDA seconds
+    STA GRP0
+    LDA minutes
+    STA GRP1
+
+    LDX #225 ;; 228 - 3 
 Display
     STA WSYNC
     DEX
@@ -99,6 +114,7 @@ OverScanLoop
     BNE OverScanLoop
 
     LDA frames
+    CLC
     ADC #1
     STA frames
     CMP #50 ; PAL has 50 frames / sec
@@ -106,6 +122,7 @@ OverScanLoop
     LDA #0
     STA frames
     LDA seconds
+    CLC
     ADC #1
     CMP #60
     STA seconds
@@ -113,6 +130,7 @@ OverScanLoop
     LDA #0
     STA seconds
     LDA minutes
+    CLC
     ADC #1
     STA minutes
 
