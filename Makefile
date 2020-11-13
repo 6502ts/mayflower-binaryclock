@@ -4,8 +4,7 @@ BINARIES = bitclock.bin
 INCLUDE =
 
 DASM = dasm
-DASM = $(HOME)/Projekte/Mayday/BinaryClock-Atari/dasm/dasm
-DASM_OPTS = -I.. -f3
+DASM_OPTS = -I.. -f3 $(DASM_EXTRA_OPTS)
 
 all: $(BINARIES)
 
