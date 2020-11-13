@@ -25,43 +25,29 @@ ClearMem
 	BNE ClearMem
 
 ;;; Setup Players
-    LDA #15
+    LDA #16
     STA hours
-    LDA #23
+    LDA #05
     STA minutes
-    LDA #31
+    LDA #44
     STA seconds
 
 	LDA #$00		
 	STA COLUBK	
 	LDA #$57
 	STA COLUP0
-	LDA #$67
-	STA COLUP1
     LDA #%10101010
     STA GRP0
-    STA GRP1
+
     LDA #$67
     STA NUSIZ0
-    STA NUSIZ1
-
-    LDA #02
-    STA ENAM0
-    STA ENAM1
 
     STA WSYNC
 
-    STA RESM0
-    STA RESM1
-
     Sleep 20
-    STA RESM0
-    STA RESM1
 
     NOP
     NOP
-
-    STA RESP1
 
     Sleep 12
 
@@ -91,21 +77,43 @@ VBankLoop
 
     LDA #$FF
     STA GRP0
-    STA GRP1
     STA WSYNC
     STA WSYNC
     STA WSYNC
 
-    LDA seconds
+    LDA #$57
+    STA COLUP0
+    LDA hours
     STA GRP0
-    LDA minutes
-    STA GRP1
 
-    LDX #225 ;; 228 - 3 
-Display
+    LDX #75 ;; (228 - 3 ) / 3
+DisplayHour
     STA WSYNC
     DEX
-    BNE Display
+    BNE DisplayHour
+
+    LDA #$47
+    STA COLUP0
+    LDA minutes
+    STA GRP0
+
+    LDX #75 ;; (228 - 3 ) / 3
+DisplayMinute
+    STA WSYNC
+    DEX
+    BNE DisplayMinute
+
+    LDA #$7
+    STA COLUP0
+    LDA seconds
+    STA GRP0
+
+    LDX #75 ;; (228 - 3 ) / 3
+DisplaySecond
+    STA WSYNC
+    DEX
+    BNE DisplaySecond
+
 
     LDX #36 ;; overscan 36
 OverScanLoop
@@ -133,7 +141,13 @@ OverScanLoop
     CLC
     ADC #1
     STA minutes
+    CMP #60
+    BNE Exit
+    INC hours
+    LDA #0
+    STA minutes
 
+Exit
     JMP MainLoop
 
  
