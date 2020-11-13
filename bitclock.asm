@@ -12,16 +12,16 @@ frames  DS.B 1
     org $F000
 
 Start
-	SEI	
-	CLD  	
+	SEI
+	CLD
 
 ;;; Clear Page0
-	LDX #$FF	
-	TXS	
-	LDA #0		
-ClearMem 
-	STA 0,X		
-	DEX		
+	LDX #$FF
+	TXS
+	LDA #0
+ClearMem
+	STA 0,X
+	DEX
 	BNE ClearMem
 
 ;;; Setup time
@@ -33,8 +33,8 @@ ClearMem
     STA seconds
 
 ;;; Setup Players
-	LDA #$00		
-	STA COLUBK	
+	LDA #$00
+	STA COLUBK
 	LDA #$57
 	STA COLUP0
 
@@ -52,14 +52,14 @@ ClearMem
 
     STA RESP0
 MainLoop
- 
+
     LDA #$02
     STA VSYNC
-    
+
     STA WSYNC
     STA WSYNC
     STA WSYNC
-    
+
     LDA #0
     STA VSYNC
 
@@ -115,12 +115,12 @@ DisplaySecond
     DEX
     BNE DisplaySecond
 
+    LDA #$02
+    STA VBLANK
 
-    LDX #36 ;; overscan 36
-OverScanLoop
-    STA WSYNC
-    DEX
-    BNE OverScanLoop
+    ;; overscan 36
+    LDA #43 ;; 42 * 64 cycles = 35.something lines
+    STA TIM64T
 
     LDA frames
     CLC
@@ -156,9 +156,14 @@ OverScanLoop
     STA hours
 
 Exit
+    LDA INTIM
+    BNE Exit
+
+    ;; somewhere in line 35 and a few cycles left
+    STA WSYNC
+
     JMP MainLoop
 
- 
     org $FFFC
 	.word Start
 	.word Start
