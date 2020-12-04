@@ -23,6 +23,7 @@ ClearMem
 	STA 0,X
 	DEX
 	BNE ClearMem
+InitComplete
 
 ;;; Setup time
     LDA #23
@@ -122,6 +123,8 @@ DisplaySecond
     LDA #43 ;; 42 * 64 cycles = 35.something lines
     STA TIM64T
 
+AdvanceClock
+
     LDA frames
     CLC
     ADC #1
@@ -154,6 +157,8 @@ DisplaySecond
     BNE Exit
     LDA #0
     STA hours
+
+ClockIncrementDone
 
 Exit
     LDA INTIM

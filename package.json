@@ -1,0 +1,31 @@
+{
+  "name": "mayflower-binaryclock",
+  "version": "1.0.0",
+  "description": "Binary clock for the VCS / unit test sample",
+  "main": "index.js",
+  "repository": "https://github.com/6502ts/mayflower-binaryclock.git",
+  "contributors": [
+    "Xaver Lopenstedt <xaver@lopenstedt.de>",
+    "Christian Speckner <christian.speckner@mayflower.de>",
+    "Stefan Siegl <stesie@brokenpipe.de>"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "6502.ts": "^0.9.14",
+    "@types/mocha": "^8.0.4",
+    "@types/node": "^14.14.10",
+    "mocha": "^8.2.1",
+    "ts-node": "^9.1.0",
+    "tslib": "^2.0.3",
+    "typescript": "^4.1.2"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "parser": "typescript"
+  },
+  "scripts": {
+    "test": "mocha --require ts-node/register -u tdd -R spec test.ts"
+  }
+}
