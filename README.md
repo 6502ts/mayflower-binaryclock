@@ -1,16 +1,19 @@
-# Prerequisites
-
-* [dasm](https://dasm-assembler.github.io/)
-* [6502.ts](https://github.com/6502ts/6502.ts)
-* [stella](https://stella-emu.github.io/)
-
-# How to build
+# Build
 
 ```
-make DASM_EXTRA_OPTS=-IPATH_TO/6502.ts/aux/2600
+$ make
 ```
-# How to run in simulator
+
+# Run the ttests
 
 ```
-make run
+$ yarn install
+$ yarn test
+```
+
+Running the tests requires [NodeJS](https://nodejs.org/en/) and [Yarn](https://yarnpkg.com)
+installed. If you have NodeJS installed and working you can install yarn by doing
+
+```
+$ npm install -g yarn
 ```
