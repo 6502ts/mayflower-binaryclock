@@ -43,7 +43,6 @@ InitComplete
 ;;; Setup TIA
 	LDA #$00
 	STA COLUBK
-    STA CTRLPF
 	LDA #$57
 	STA COLUP0
 	LDA #$67
@@ -51,12 +50,13 @@ InitComplete
 
     LDA 20
     STA COLUPF
-
-    LDA #%01010000
+    LDA #$01
+    STA CTRLPF
+    LDA #%00000000
     STA PF0
-    LDA #%10101010
+    LDA #%00000010
     STA PF1
-    LDA #%01010101
+    LDA #%00010101
     STA PF2
 
     LDA #$67
@@ -69,13 +69,11 @@ InitComplete
 
     STA RESP0
 
-    Sleep 12
+    Sleep 14
     STA RESP1
 
     LDA #$10
     STA HMP0
-    LDA #$e0
-    STA HMP1
     STA WSYNC
     STA HMOVE
 
@@ -102,15 +100,6 @@ VBankLoop
     LDA #$00
     STA VBLANK
 
-    LDA #$67
-    STA COLUP0
-    LDA #$FF
-    STA GRP0
-    STA GRP1
-    STA WSYNC
-    STA WSYNC
-    STA WSYNC
-
     LDA #$57
     STA COLUP0
     STA COLUP1
@@ -119,7 +108,7 @@ VBankLoop
     LDA hoursLo
     STA GRP1
 
-    LDX #75 ;; (228 - 3 ) / 3
+    LDX #72 ;; (228 - 3 ) / 3
 DisplayHour
     STA WSYNC
     DEX
@@ -133,7 +122,15 @@ DisplayHour
     LDA minutesLo
     STA GRP1
 
-    LDX #75 ;; (228 - 3 ) / 3
+    LDA #$02
+    STA VBLANK
+    STA WSYNC
+    STA WSYNC
+    STA WSYNC
+    LDA #$0
+    STA VBLANK
+
+    LDX #72 ;; (228 - 3 ) / 3
 DisplayMinute
     STA WSYNC
     DEX
@@ -147,7 +144,15 @@ DisplayMinute
     LDA secondsLo
     STA GRP1
 
-    LDX #75 ;; (228 - 3 ) / 3
+    LDA #$02
+    STA VBLANK
+    STA WSYNC
+    STA WSYNC
+    STA WSYNC
+    LDA #$0
+    STA VBLANK
+
+    LDX #72 ;; (228 - 3 ) / 3
 DisplaySecond
     STA WSYNC
     DEX
@@ -156,8 +161,8 @@ DisplaySecond
     LDA #$02
     STA VBLANK
 
-    ;; overscan 36
-    LDA #43 ;; 42 * 64 cycles = 35.something lines
+    ;; overscan 42
+    LDA #49 ;; 48 * 64 cycles = 40.something lines
     STA TIM64T
 
 OverscanLogicStart
@@ -226,7 +231,8 @@ WaitTimer
     LDA INTIM
     BNE WaitTimer
 
-    ;; somewhere in line 35 and a few cycles left
+    ;; somewhere in line 40 and a few cycles left
+    STA WSYNC
     STA WSYNC
 
     JMP MainLoop
