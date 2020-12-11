@@ -10,16 +10,21 @@ hours   DS.B 1
 minutes DS.B 1
 seconds DS.B 1
 frames  DS.B 1
+
+timeBcDStart
 hoursHi   DS.B 1
 hoursLo   DS.B 1
 minutesHi DS.B 1
 minutesLo DS.B 1
 secondsHi DS.B 1
 secondsLo DS.B 1
+
 editMode  DS.B 1
 lastInpt4 DS.B 1
 lastSwcha DS.B 1
 scratch   DS.B 1
+colorLeft DS.B 1
+colorRight DS.B 1
 
     seg code_main
     org $F000
@@ -101,104 +106,137 @@ VBankLoop
     BNE VBankLoop
 
     LDA #$00
-    STA COLUBK
+    STA colorLeft
+    STA colorRight
 
-    LDA #1
-    CMP editMode
-    BNE hourNotSelected
-
-    LDA #EDIT_MODE_COLOR
-    STA COLUBK
-hourNotSelected
-
-    STA WSYNC
-
-    LDA #$00
-    STA VBLANK
-
+    LDX #EDIT_MODE_COLOR
+    LDA editMode
+    CMP #$1
+    BNE HourHighColorDone
+    STX colorLeft
+HourHighColorDone
+    CMP #$2
+    BNE HourLowColorDone
+    STX colorRight
+HourLowColorDone
 
     LDA #$57
     STA COLUP0
     STA COLUP1
-    LDA hoursHi
+    LDX hoursHi
+    LDA expandTable,X
     STA GRP0
-    LDA hoursLo
+    LDX hoursLo
+    LDA expandTable,X
     STA GRP1
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplayHour
     STA WSYNC
+    LDA #$00        ; 2
+    STA VBLANK      ; 5
+    LDA colorLeft   ; 7
+    STA COLUBK      ; 10
+    Sleep 32
+    LDA colorRight
+    STA COLUBK
+
     DEX
     BNE DisplayHour
 
+    STA WSYNC
     LDA #$02
     STA VBLANK
 
     LDA #$00
-    STA COLUBK
+    STA colorLeft
+    STA colorRight
 
-    LDA #2
-    CMP editMode
-    BNE minuteNotSelected
-
-    LDA #EDIT_MODE_COLOR
-    STA COLUBK
-minuteNotSelected
+    LDX #EDIT_MODE_COLOR
+    LDA editMode
+    CMP #$3
+    BNE MinuteHighColorDone
+    STX colorLeft
+MinuteHighColorDone
+    CMP #$4
+    BNE MinuteLowColorDone
+    STX colorRight
+MinuteLowColorDone
 
     LDA #$47
     STA COLUP0
     STA COLUP1
-    LDA minutesHi
+    LDX minutesHi
+    LDA expandTable,X
     STA GRP0
-    LDA minutesLo
+    LDX minutesLo
+    LDA expandTable,X
     STA GRP1
 
     STA WSYNC
     STA WSYNC
-    STA WSYNC
-    LDA #$0
-    STA VBLANK
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplayMinute
     STA WSYNC
+    LDA #$00
+    STA VBLANK      ; 5
+    LDA colorLeft   ; 7
+    STA COLUBK      ; 10
+    Sleep 32
+    LDA colorRight
+    STA COLUBK
+
     DEX
     BNE DisplayMinute
 
+    STA WSYNC
     LDA #$02
     STA VBLANK
 
     LDA #$00
-    STA COLUBK
+    STA colorLeft
+    STA colorRight
 
-    LDA #3
-    CMP editMode
-    BNE secondNotSelected
-
-    LDA #EDIT_MODE_COLOR
-    STA COLUBK
-secondNotSelected
+    LDX #EDIT_MODE_COLOR
+    LDA editMode
+    CMP #$5
+    BNE SecondHighColorDone
+    STX colorLeft
+SecondHighColorDone
+    CMP #$6
+    BNE SecondLowColorDone
+    STX colorRight
+SecondLowColorDone
 
     LDA #$87
     STA COLUP0
     STA COLUP1
-    LDA secondsHi
+    LDX secondsHi
+    LDA expandTable,X
     STA GRP0
-    LDA secondsLo
+    LDX secondsLo
+    LDA expandTable,X
     STA GRP1
 
     STA WSYNC
     STA WSYNC
-    STA WSYNC
-    LDA #$0
-    STA VBLANK
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplaySecond
     STA WSYNC
+    LDA #$0
+    STA VBLANK      ; 5
+    LDA colorLeft   ; 7
+    STA COLUBK      ; 10
+    Sleep 32
+    LDA colorRight
+    STA COLUBK
+
     DEX
     BNE DisplaySecond
 
+    STA WSYNC
     LDA #$02
     STA VBLANK
 
@@ -269,7 +307,6 @@ ClockIncrementDone
     JSR ExtractLowerNibble
     STA secondsLo
 
-
     LDA INPT4
     TAX
     EOR lastInpt4
@@ -281,7 +318,7 @@ ClockIncrementDone
     LDA editMode
     CLC
     ADC #1
-    CMP #4
+    CMP #7
     BNE toggleEditModeDone
     LDA #0
     STA frames
@@ -289,9 +326,9 @@ toggleEditModeDone
     STA editMode
 processFireEnd
     STX lastInpt4
+
     LDA editMode
     BEQ OverscanLogicEnd
-
     LDA SWCHA
     TAX
     EOR lastSwcha
@@ -300,29 +337,58 @@ processFireEnd
     EOR #$FF
     AND scratch
     STA scratch
-    SED
 joystickTestUp
     LDY editMode
     DEY
     LDA #$10
     BIT scratch
     BEQ joystickTestUpEnd
-    LDA hours,Y
+    LDA timeBcDStart,Y
     CLC
     ADC #1
-    STA hours,Y
+    CMP #10
+    BNE joystickTestUpStore
+    LDA #0
+joystickTestUpStore
+    STA timeBcDStart,Y
 joystickTestUpEnd
 joystickTestDown
     LDA #$20
     BIT scratch
     BEQ joystickTestDownEnd
-    LDA hours,Y
+    LDA timeBcDStart,Y
     SEC
     SBC #1
-    STA hours,Y
+    BCS joystickTestDownStore
+    LDA #9
+joystickTestDownStore
+    STA timeBcDStart,Y
 joystickTestDownEnd
-    CLD
     STX lastSwcha
+
+    LDA hoursHi
+    ASL
+    ASL
+    ASL
+    ASL
+    EOR hoursLo
+    STA hours
+
+    LDA minutesHi
+    ASL
+    ASL
+    ASL
+    ASL
+    EOR minutesLo
+    STA minutes
+
+    LDA secondsHi
+    ASL
+    ASL
+    ASL
+    ASL
+    EOR secondsLo
+    STA seconds
 
 OverscanLogicEnd
 WaitTimer
@@ -337,8 +403,6 @@ WaitTimer
 
 ExtractLowerNibble SUBROUTINE
     AND #$0F
-    TAY
-    LDA expandTable,Y
     RTS
 
 ExtractHigherNibble SUBROUTINE
@@ -347,8 +411,6 @@ ExtractHigherNibble SUBROUTINE
     LSR
     LSR
     LSR
-    TAY
-    LDA expandTable,Y
     RTS
 
     org $FF00
