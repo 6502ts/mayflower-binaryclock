@@ -1,8 +1,8 @@
-import { strictEqual } from 'assert';
+import assert from 'assert';
 import path from 'path';
 import VcsRunner from '6502.ts/lib/test/VcsRunner';
 
-suite('mayflower-binaryclock', () => {
+suite('binclock', () => {
     let runner: VcsRunner;
 
     setup(async () => {
@@ -13,24 +13,24 @@ suite('mayflower-binaryclock', () => {
         runner.runUntil(() => runner.hasReachedLabel('InitComplete'));
 
         for (let i = 0xff; i >= 0x80; i--) {
-            strictEqual(runner.readMemory(i), 0, `located at 0x${i.toString(16).padStart(4, '0')}`);
+            assert.strictEqual(runner.readMemory(i), 0, `located at 0x${i.toString(16).padStart(4, '0')}`);
         }
     });
 
     test('handles day-change properly (via mainloop)', () => {
         runner
             .runUntil(() => runner.hasReachedLabel('AdvanceClock'))
-            .writeMemoryAt('hours', 23)
-            .writeMemoryAt('minutes', 59)
-            .writeMemoryAt('seconds', 59);
+            .writeMemoryAt('hours', 0x23)
+            .writeMemoryAt('minutes', 0x59)
+            .writeMemoryAt('seconds', 0x59);
 
         for (let i = 0; i < 50; i++) {
             runner.runUntil(() => runner.hasReachedLabel('AdvanceClock'));
         }
 
-        strictEqual(runner.readMemoryAt('hours'), 0);
-        strictEqual(runner.readMemoryAt('minutes'), 0);
-        strictEqual(runner.readMemoryAt('seconds'), 0);
+        assert.strictEqual(runner.readMemoryAt('hours'), 0);
+        assert.strictEqual(runner.readMemoryAt('minutes'), 0);
+        assert.strictEqual(runner.readMemoryAt('seconds'), 0);
     });
 
     test('handles day-change properly (unit test)', () => {
@@ -38,15 +38,118 @@ suite('mayflower-binaryclock', () => {
             .boot()
             .cld()
             .jumpTo('AdvanceClock')
-            .writeMemoryAt('hours', 23)
-            .writeMemoryAt('minutes', 59)
-            .writeMemoryAt('seconds', 59)
+            .writeMemoryAt('hours', 0x23)
+            .writeMemoryAt('minutes', 0x59)
+            .writeMemoryAt('seconds', 0x59)
             .writeMemoryAt('frames', 49)
             .runUntil(() => runner.hasReachedLabel('ClockIncrementDone'));
 
-        strictEqual(runner.readMemoryAt('hours'), 0);
-        strictEqual(runner.readMemoryAt('minutes'), 0);
-        strictEqual(runner.readMemoryAt('seconds'), 0);
-        strictEqual(runner.readMemoryAt('frames'), 0);
+        assert.strictEqual(runner.readMemoryAt('hours'), 0);
+        assert.strictEqual(runner.readMemoryAt('minutes'), 0);
+        assert.strictEqual(runner.readMemoryAt('seconds'), 0);
+        assert.strictEqual(runner.readMemoryAt('frames'), 0);
+    });
+
+    [
+        [0x90, 0],
+        [0x81, 1],
+        [0x72, 4],
+        [0x63, 5],
+        [0x54, 16],
+        [0x45, 17],
+        [0x36, 20],
+        [0x27, 21],
+        [0x18, 64],
+        [0x09, 65],
+    ].forEach(([x, y]) =>
+        test(`extract lower nibble from BCD ${x} (unit test)`, () => {
+            runner
+                .boot()
+                .cld()
+                .jumpTo('ExtractLowerNibble');
+            runner.getBoard().getCpu().state.a = x;
+            runner
+                .runUntil(() => runner.hasReachedLabel('ExtractLowerNibbleEnd'));
+
+            assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+        })
+    );
+
+
+
+    [
+        [0x09, 0],
+        [0x18, 1],
+        [0x27, 4],
+        [0x36, 5],
+        [0x45, 16],
+        [0x54, 17],
+        [0x63, 20],
+        [0x72, 21],
+        [0x81, 64],
+        [0x90, 65],
+    ].forEach(([x, y]) =>
+        test(`extract high nibble from BCD ${x} (unit test)`, () => {
+            runner
+                .boot()
+                .cld()
+                .jumpTo('ExtractHigherNibble');
+            runner.getBoard().getCpu().state.a = x;
+            runner
+                .runUntil(() => runner.hasReachedLabel('ExtractHigherNibbleEnd'));
+
+            assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+        })
+    );
+
+    test('frame size is 312 lines / PAL', () => {
+        let cyclesAtFrameStart = -1;
+
+        runner
+            .runTo('MainLoop')
+            .trapAt('MainLoop', () => {
+                if (cyclesAtFrameStart > 0) {
+                    assert.strictEqual(runner.getCpuCycles() - cyclesAtFrameStart, 312 * 76);
+                }
+
+                cyclesAtFrameStart = runner.getCpuCycles();
+            })
+            .runTo('MainLoop')
+            .runTo('MainLoop');
+    });
+
+    test('frame size is 312 lines / PAL with overflow', () => {
+        let cyclesAtFrameStart = -1;
+
+        runner
+            .runTo('MainLoop')
+            .trapAt('MainLoop', () => {
+                if (cyclesAtFrameStart > 0) {
+                    assert.strictEqual(runner.getCpuCycles() - cyclesAtFrameStart, 312 * 76);
+                }
+
+                cyclesAtFrameStart = runner.getCpuCycles();
+            })
+            .runTo('MainLoop')
+            .writeMemoryAt('hours', 0x23)
+            .writeMemoryAt('minutes', 0x59)
+            .writeMemoryAt('seconds', 0x59)
+            .writeMemoryAt('frames', 49)
+            .runTo('MainLoop');
+    });
+
+    test('it takes 50 frames to count one second', () => {
+        let frameNo = 1;
+
+        runner
+            .runTo('MainLoop')
+            .writeMemoryAt('hours', 0)
+            .writeMemoryAt('minutes', 0)
+            .writeMemoryAt('seconds', 0)
+            .writeMemoryAt('frames', 0)
+            .trapAt('MainLoop', () => frameNo++)
+            .runUntil(() => runner.readMemoryAt('seconds') === 1, 100 * 312 * 76);
+
+        assert.strictEqual(frameNo, 50);
     });
 });

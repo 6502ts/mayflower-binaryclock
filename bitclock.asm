@@ -8,6 +8,13 @@ hours   DS.B 1
 minutes DS.B 1
 seconds DS.B 1
 frames  DS.B 1
+hoursHi   DS.B 1
+hoursLo   DS.B 1
+minutesHi DS.B 1
+minutesLo DS.B 1
+secondsHi DS.B 1
+secondsLo DS.B 1
+
     seg code_main
     org $F000
 
@@ -26,11 +33,11 @@ ClearMem
 InitComplete
 
 ;;; Setup time
-    LDA #23
+    LDA #$23
     STA hours
-    LDA #58
+    LDA #$58
     STA minutes
-    LDA #50
+    LDA #$50
     STA seconds
 
 ;;; Setup Players
@@ -39,19 +46,22 @@ InitComplete
 	LDA #$57
 	STA COLUP0
 
+	LDA #$67
+	STA COLUP1
+
     LDA #$67
     STA NUSIZ0
+    STA NUSIZ1
 
     STA WSYNC
 
-    Sleep 20
-
-    NOP
-    NOP
-
-    Sleep 12
+    Sleep 36
 
     STA RESP0
+
+    Sleep 12
+    STA RESP1
+
 MainLoop
 
     LDA #$02
@@ -79,14 +89,18 @@ VBankLoop
     STA COLUP0
     LDA #$FF
     STA GRP0
+    STA GRP1
     STA WSYNC
     STA WSYNC
     STA WSYNC
 
     LDA #$57
     STA COLUP0
-    LDA hours
+    STA COLUP1
+    LDA hoursHi
     STA GRP0
+    LDA hoursLo
+    STA GRP1
 
     LDX #75 ;; (228 - 3 ) / 3
 DisplayHour
@@ -96,8 +110,11 @@ DisplayHour
 
     LDA #$47
     STA COLUP0
-    LDA minutes
+    STA COLUP1
+    LDA minutesHi
     STA GRP0
+    LDA minutesLo
+    STA GRP1
 
     LDX #75 ;; (228 - 3 ) / 3
 DisplayMinute
@@ -107,8 +124,11 @@ DisplayMinute
 
     LDA #$87
     STA COLUP0
-    LDA seconds
+    STA COLUP1
+    LDA secondsHi
     STA GRP0
+    LDA secondsLo
+    STA GRP1
 
     LDX #75 ;; (228 - 3 ) / 3
 DisplaySecond
@@ -123,6 +143,7 @@ DisplaySecond
     LDA #43 ;; 42 * 64 cycles = 35.something lines
     STA TIM64T
 
+OverscanLogicStart
 AdvanceClock
 
     LDA frames
@@ -130,44 +151,99 @@ AdvanceClock
     ADC #1
     STA frames
     CMP #50 ; PAL has 50 frames / sec
-    BNE Exit
+    BNE ClockIncrementDone
+    SED
     LDA #0
     STA frames
     LDA seconds
     CLC
     ADC #1
-    CMP #60
+    CMP #$60
     STA seconds
-    BNE Exit
+    BNE ClockIncrementDone
     LDA #0
     STA seconds
     LDA minutes
     CLC
     ADC #1
     STA minutes
-    CMP #60
-    BNE Exit
+    CMP #$60
+    BNE ClockIncrementDone
     LDA #0
     STA minutes
     LDA hours
     CLC
     ADC #1
     STA hours
-    CMP #24
-    BNE Exit
+    CMP #$24
+    BNE ClockIncrementDone
     LDA #0
     STA hours
 
 ClockIncrementDone
+    LDA hours
+    JSR ExtractHigherNibble
+    STA hoursHi
+    LDA hours
+    JSR ExtractLowerNibble
+    STA hoursLo
 
-Exit
+    LDA minutes
+    JSR ExtractHigherNibble
+    STA minutesHi
+    LDA minutes
+    JSR ExtractLowerNibble
+    STA minutesLo
+
+    LDA seconds
+    JSR ExtractHigherNibble
+    STA secondsHi
+    LDA seconds
+    JSR ExtractLowerNibble
+    STA secondsLo
+
+OverscanLogicEnd
+    CLD
+WaitTimer
     LDA INTIM
-    BNE Exit
+    BNE WaitTimer
 
     ;; somewhere in line 35 and a few cycles left
     STA WSYNC
 
     JMP MainLoop
+
+ExtractLowerNibble SUBROUTINE
+    AND #$0F
+    TAY
+    LDA expandTable,Y
+ExtractLowerNibbleEnd
+    RTS
+
+ExtractHigherNibble SUBROUTINE
+    AND #$F0
+    LSR
+    LSR
+    LSR
+    LSR
+    TAY
+    LDA expandTable,Y
+ExtractHigherNibbleEnd
+    RTS
+
+    org $FF00
+expandTable
+    DC.B #%00000000
+    DC.B #%00000001
+    DC.B #%00000100
+    DC.B #%00000101
+    DC.B #%00010000
+    DC.B #%00010001
+    DC.B #%00010100
+    DC.B #%00010101
+    DC.B #%01000000
+    DC.B #%01000001
+
 
     org $FFFC
 	.word Start
