@@ -50,56 +50,50 @@ suite('binclock', () => {
         assert.strictEqual(runner.readMemoryAt('frames'), 0);
     });
 
-    [
-        [0x90, 0],
-        [0x81, 1],
-        [0x72, 4],
-        [0x63, 5],
-        [0x54, 16],
-        [0x45, 17],
-        [0x36, 20],
-        [0x27, 21],
-        [0x18, 64],
-        [0x09, 65],
-    ].forEach(([x, y]) =>
-        test(`extract lower nibble from BCD ${x} (unit test)`, () => {
-            runner
-                .boot()
-                .cld()
-                .jumpTo('ExtractLowerNibble');
-            runner.getBoard().getCpu().state.a = x;
-            runner
-                .runUntil(() => runner.hasReachedLabel('ExtractLowerNibbleEnd'));
+    suite('extract lower nibble from BCD', () =>
+        [
+            [0x90, 0],
+            [0x81, 1],
+            [0x72, 4],
+            [0x63, 5],
+            [0x54, 16],
+            [0x45, 17],
+            [0x36, 20],
+            [0x27, 21],
+            [0x18, 64],
+            [0x09, 65],
+        ].forEach(([x, y]) =>
+            test(`0x${x.toString(16).padStart(2, '0')} -> 0b${y.toString(2).padStart(8, '0')}`, () => {
+                runner.boot().cld().jumpTo('ExtractLowerNibble');
+                runner.getBoard().getCpu().state.a = x;
+                runner.runUntil(() => runner.hasReachedLabel('ExtractLowerNibbleEnd'));
 
-            assert.strictEqual(runner.getBoard().getCpu().state.a, y);
-        })
+                assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+            })
+        )
     );
 
+    suite('extract higher nibble from BCD', () =>
+        [
+            [0x09, 0],
+            [0x18, 1],
+            [0x27, 4],
+            [0x36, 5],
+            [0x45, 16],
+            [0x54, 17],
+            [0x63, 20],
+            [0x72, 21],
+            [0x81, 64],
+            [0x90, 65],
+        ].forEach(([x, y]) =>
+            test(`0x${x.toString(16).padStart(2, '0')} -> 0b${y.toString(2).padStart(8, '0')}`, () => {
+                runner.boot().cld().jumpTo('ExtractHigherNibble');
+                runner.getBoard().getCpu().state.a = x;
+                runner.runUntil(() => runner.hasReachedLabel('ExtractHigherNibbleEnd'));
 
-
-    [
-        [0x09, 0],
-        [0x18, 1],
-        [0x27, 4],
-        [0x36, 5],
-        [0x45, 16],
-        [0x54, 17],
-        [0x63, 20],
-        [0x72, 21],
-        [0x81, 64],
-        [0x90, 65],
-    ].forEach(([x, y]) =>
-        test(`extract high nibble from BCD ${x} (unit test)`, () => {
-            runner
-                .boot()
-                .cld()
-                .jumpTo('ExtractHigherNibble');
-            runner.getBoard().getCpu().state.a = x;
-            runner
-                .runUntil(() => runner.hasReachedLabel('ExtractHigherNibbleEnd'));
-
-            assert.strictEqual(runner.getBoard().getCpu().state.a, y);
-        })
+                assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+            })
+        )
     );
 
     test('frame size is 312 lines / PAL', () => {
