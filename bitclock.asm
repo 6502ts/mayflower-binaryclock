@@ -90,6 +90,8 @@ InitComplete
     STA lastInpt4
     LDA SWCHA
     STA lastSwcha
+    LDA #$80
+    STA editMode
 InitVariableComplete
 
 ;;; Setup TIA
@@ -153,11 +155,11 @@ VBankLoop
 
     LDX #EDIT_MODE_COLOR
     LDA editMode
-    CMP #$1
+    CMP #$0
     BNE HourHighColorDone
     STX colorLeft
 HourHighColorDone
-    CMP #$2
+    CMP #$1
     BNE HourLowColorDone
     STX colorRight
 HourLowColorDone
@@ -188,11 +190,11 @@ DisplayHour
 
     LDX #EDIT_MODE_COLOR
     LDA editMode
-    CMP #$3
+    CMP #$2
     BNE MinuteHighColorDone
     STX colorLeft
 MinuteHighColorDone
-    CMP #$4
+    CMP #$3
     BNE MinuteLowColorDone
     STX colorRight
 MinuteLowColorDone
@@ -228,11 +230,11 @@ DisplayMinute
 
     LDX #EDIT_MODE_COLOR
     LDA editMode
-    CMP #$5
+    CMP #$4
     BNE SecondHighColorDone
     STX colorLeft
 SecondHighColorDone
-    CMP #$6
+    CMP #$5
     BNE SecondLowColorDone
     STX colorRight
 SecondLowColorDone
@@ -271,7 +273,7 @@ DisplaySecond
 OverscanLogicStart
 AdvanceClock
     LDA editMode
-    BNE ClockIncrementDone
+    BPL ClockIncrementDone
 
     LDA frames
     CLC
@@ -323,19 +325,16 @@ ClockIncrementDone
     AND scratch
     BPL processFireEnd
     LDA editMode
-    CLC
-    ADC #1
-    CMP #7
-    BNE toggleEditModeDone
+    EOR #$80
+    STA editMode
+    BMI processFireEnd
     LDA #0
     STA frames
-toggleEditModeDone
-    STA editMode
 processFireEnd
     STX lastInpt4
 
     LDA editMode
-    BEQ OverscanLogicEnd
+    BMI processJoystickEnd
 
     LDA SWCHA
     TAX
@@ -347,7 +346,6 @@ processFireEnd
     STA scratch
 joystickTestUp
     LDY editMode
-    DEY
     LDA #$10
     BIT scratch
     BEQ joystickTestUpEnd
@@ -372,18 +370,54 @@ joystickTestDown
 joystickTestDownStore
     STA timeBcDStart,Y
 joystickTestDownEnd
+joystickTestLeft
+    LDA #$40
+    BIT scratch
+    BEQ joystickTestLeftEnd
+    LDA editMode
+    SEC
+    SBC #1
+    BCS joystickTestLeftStore
+    LDA #5
+joystickTestLeftStore
+    STA editMode
+joystickTestLeftEnd
+joystickTestRight
+    LDA #$80
+    BIT scratch
+    BEQ joystickTestRightEnd
+    LDA editMode
+    CLC
+    ADC #1
+    CMP #6
+    BNE joystickTestRightStore
+    LDA #0
+joystickTestRightStore
+    STA editMode
+joystickTestRightEnd
     STX lastSwcha
+processJoystickEnd
 
     LDA hoursHi
     CMP #$03
-    BCC hoursHiOverflowCheckDone
+    BNE hoursHiOverflowCheckDone
     LDA #$0
     STA hoursHi
 hoursHiOverflowCheckDone
+    CMP #$09
+    BNE hoursHiUnderflowCheckDone
+    LDA #$02
+    STA hoursHi
+hoursHiUnderflowCheckDone
 
     CMP #$02
     BNE hoursLoOverflowCheckDone
     LDA hoursLo
+    CMP #$09
+    BNE hoursLoUnderflowCheckDone
+    LDA #$4
+    STA hoursLo
+hoursLoUnderflowCheckDone
     CMP #$05
     BCC hoursLoOverflowCheckDone
     LDA #$0
