@@ -93,6 +93,7 @@ InitComplete
 InitVariableComplete
 
 ;;; Setup TIA
+    ; setup PLayfield
     LDA 20
     STA COLUPF
     LDA #$01
@@ -104,6 +105,7 @@ InitVariableComplete
     LDA #%00010101
     STA PF2
 
+    ; one copy, 4 pixels wide
     LDA #$67
     STA NUSIZ0
     STA NUSIZ1
@@ -133,6 +135,8 @@ MainLoop
     LDA #0
     STA VSYNC
 
+; LINES: 3
+
     LDX #44 ;; 47 - 3
     LDA #$02
     STA VBLANK
@@ -140,6 +144,8 @@ VBankLoop
     STA WSYNC
     DEX
     BNE VBankLoop
+
+; LINES: 47
 
     LDA #$00
     STA colorLeft
@@ -164,11 +170,13 @@ HourLowColorDone
     LDEXPAND hoursLo
     STA GRP1
 
-    LDX #72 ;; (228 - 3 ) / 3
+    LDX #72 ;; (228 - 3 ) / 3 - 3
 DisplayHour
     CLOCKLINE
     DEX
     BNE DisplayHour
+
+; LINES: 119
 
     STA WSYNC
     LDA #$02
@@ -200,11 +208,15 @@ MinuteLowColorDone
     STA WSYNC
     STA WSYNC
 
-    LDX #72 ;; (228 - 3 ) / 3
+; LINES : 122
+
+    LDX #72 ;; (228 - 3 ) / 3 - 3
 DisplayMinute
     CLOCKLINE
     DEX
     BNE DisplayMinute
+
+; LINES : 194
 
     STA WSYNC
     LDA #$02
@@ -236,15 +248,21 @@ SecondLowColorDone
     STA WSYNC
     STA WSYNC
 
-    LDX #72 ;; (228 - 3 ) / 3
+; LINES : 197
+
+    LDX #72 ;; (228 - 3 ) / 3 - 3
 DisplaySecond
     CLOCKLINE
     DEX
     BNE DisplaySecond
 
+; LINES : 269
+
     STA WSYNC
     LDA #$02
     STA VBLANK
+
+; LINES : 270
 
     ;; overscan 42
     LDA #49 ;; 48 * 64 cycles = 40.something lines
@@ -365,9 +383,13 @@ WaitTimer
     LDA INTIM
     BNE WaitTimer
 
+; LINES: 310.something
+
     ;; somewhere in line 40 and a few cycles left
     STA WSYNC
     STA WSYNC
+
+; LINES : 312
 
     JMP MainLoop
 
