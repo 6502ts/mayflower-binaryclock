@@ -46,6 +46,20 @@
         STA {1}
     ENDM
 
+    MAC CONSTRAIN_BCD
+        LDA {1}
+        CMP #$09
+        BNE .underflowCheckDone
+        LDA #{2}
+        STA {1}
+.underflowCheckDone
+        CMP #({2} + 1)
+        BCC .overflowCheckDone
+        LDA #$0
+        STA {1}
+.overflowCheckDone
+    ENDM
+
 EDIT_MODE_COLOR = $40
 
     seg.u vars
@@ -398,31 +412,15 @@ joystickTestRightEnd
     STX lastSwcha
 processJoystickEnd
 
-    LDA hoursHi
-    CMP #$03
-    BNE hoursHiOverflowCheckDone
-    LDA #$0
-    STA hoursHi
-hoursHiOverflowCheckDone
-    CMP #$09
-    BNE hoursHiUnderflowCheckDone
-    LDA #$02
-    STA hoursHi
-hoursHiUnderflowCheckDone
+    CONSTRAIN_BCD hoursHi,$02
 
     CMP #$02
-    BNE hoursLoOverflowCheckDone
-    LDA hoursLo
-    CMP #$09
-    BNE hoursLoUnderflowCheckDone
-    LDA #$4
-    STA hoursLo
-hoursLoUnderflowCheckDone
-    CMP #$05
-    BCC hoursLoOverflowCheckDone
-    LDA #$0
-    STA hoursLo
-hoursLoOverflowCheckDone
+    BNE constrainHoursLoDone
+    CONSTRAIN_BCD hoursLo,$04
+constrainHoursLoDone
+
+    CONSTRAIN_BCD minutesHi,$05
+    CONSTRAIN_BCD secondsHi,$05
 
     PACK hours
     PACK minutes
