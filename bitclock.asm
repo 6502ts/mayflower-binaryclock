@@ -170,13 +170,13 @@ VBankLoop
     LDX #EDIT_MODE_COLOR
     LDA editMode
     CMP #$0
-    BNE HourHighColorDone
+    BNE HoursLeftColorDone
     STX colorLeft
-HourHighColorDone
+HoursLeftColorDone
     CMP #$1
-    BNE HourLowColorDone
+    BNE HoursRightColorDone
     STX colorRight
-HourLowColorDone
+HoursRightColorDone
 
     LDA #$57
     STA COLUP0
@@ -205,13 +205,13 @@ DisplayHour
     LDX #EDIT_MODE_COLOR
     LDA editMode
     CMP #$2
-    BNE MinuteHighColorDone
+    BNE MinutesLeftColorDone
     STX colorLeft
-MinuteHighColorDone
+MinutesLeftColorDone
     CMP #$3
-    BNE MinuteLowColorDone
+    BNE MinutesRightColorDone
     STX colorRight
-MinuteLowColorDone
+MinutesRightColorDone
 
     LDA #$47
     STA COLUP0
@@ -245,13 +245,13 @@ DisplayMinute
     LDX #EDIT_MODE_COLOR
     LDA editMode
     CMP #$4
-    BNE SecondHighColorDone
+    BNE SeconsLeftColorDone
     STX colorLeft
-SecondHighColorDone
+SeconsLeftColorDone
     CMP #$5
-    BNE SecondLowColorDone
+    BNE SecondsRightColorDone
     STX colorRight
-SecondLowColorDone
+SecondsRightColorDone
 
     LDA #$87
     STA COLUP0
