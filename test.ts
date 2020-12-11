@@ -42,6 +42,7 @@ suite('binclock', () => {
             .writeMemoryAt('minutes', 0x59)
             .writeMemoryAt('seconds', 0x59)
             .writeMemoryAt('frames', 49)
+            .writeMemoryAt('editMode', 0)
             .runUntil(() => runner.hasReachedLabel('ClockIncrementDone'));
 
         assert.strictEqual(runner.readMemoryAt('hours'), 0);
@@ -101,6 +102,32 @@ suite('binclock', () => {
             })
         )
     );
+
+    test('clock is halted in edit mode', () => {
+        runner
+            .boot()
+            .cld()
+            .jumpTo('AdvanceClock')
+            .writeMemoryAt('hours', 0x23)
+            .writeMemoryAt('minutes', 0x59)
+            .writeMemoryAt('seconds', 0x59)
+            .writeMemoryAt('frames', 49)
+            .writeMemoryAt('editMode', 1)
+            .runUntil(() => runner.hasReachedLabel('ClockIncrementDone'));
+
+        assert.strictEqual(runner.readMemoryAt('hours'), 0x23);
+        assert.strictEqual(runner.readMemoryAt('minutes'), 0x59);
+        assert.strictEqual(runner.readMemoryAt('seconds'), 0x59);
+        assert.strictEqual(runner.readMemoryAt('frames'), 49);
+    });
+
+    test('pressing fire toggles edit mode', () => {
+        runner.runTo('OverscanLogicStart');
+        runner.getBoard().getJoystick0().getFire().toggle(true);
+        runner.runTo('OverscanLogicStart');
+
+        assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+    });
 
     test('frame size is 312 lines / PAL', () => {
         let cyclesAtFrameStart = -1;

@@ -14,6 +14,8 @@ minutesHi DS.B 1
 minutesLo DS.B 1
 secondsHi DS.B 1
 secondsLo DS.B 1
+editMode  DS.B 1
+lastInpt4 DS.b 1
 
     seg code_main
     org $F000
@@ -31,6 +33,8 @@ ClearMem
 	DEX
 	BNE ClearMem
 InitComplete
+    LDA #$80
+    STA lastInpt4
 
 ;;; Setup time
     LDA #$23
@@ -167,6 +171,8 @@ DisplaySecond
 
 OverscanLogicStart
 AdvanceClock
+    LDA editMode
+    BNE ClockIncrementDone
 
     LDA frames
     CLC
@@ -225,6 +231,19 @@ ClockIncrementDone
     LDA seconds
     JSR ExtractLowerNibble
     STA secondsLo
+
+
+    LDA INPT4
+    TAX
+    EOR lastInpt4
+    BPL lala
+    TXA
+    BMI lala
+    LDA editMode
+    EOR #1
+    STA editMode
+lala
+    STX lastInpt4
 
 OverscanLogicEnd
 WaitTimer
