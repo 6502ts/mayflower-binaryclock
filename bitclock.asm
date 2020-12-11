@@ -43,14 +43,6 @@ InitComplete
     STA lastSwcha
 InitVariableComplete
 
-;;; Setup time
-    LDA #$23
-    STA hours
-    LDA #$58
-    STA minutes
-    LDA #$50
-    STA seconds
-
 ;;; Setup TIA
 	LDA #$00
 	STA COLUBK
@@ -231,9 +223,9 @@ AdvanceClock
     LDA seconds
     CLC
     ADC #1
-    CMP #$60
     STA seconds
-    BNE ClockIncrementDone
+    CMP #$60
+    BCC ClockIncrementDone
     LDA #0
     STA seconds
     LDA minutes
@@ -241,7 +233,7 @@ AdvanceClock
     ADC #1
     STA minutes
     CMP #$60
-    BNE ClockIncrementDone
+    BCC ClockIncrementDone
     LDA #0
     STA minutes
     LDA hours
@@ -249,7 +241,7 @@ AdvanceClock
     ADC #1
     STA hours
     CMP #$24
-    BNE ClockIncrementDone
+    BCC ClockIncrementDone
     LDA #0
     STA hours
 
@@ -292,6 +284,7 @@ ClockIncrementDone
     CMP #4
     BNE toggleEditModeDone
     LDA #0
+    STA frames
 toggleEditModeDone
     STA editMode
 processFireEnd
