@@ -2,6 +2,50 @@
 	include vcs.h
 	include macro.h
 
+    MAC ASLN
+        REPEAT {1}
+            ASL
+        REPEND
+    ENDM
+
+    MAC LSRN
+        REPEAT {1}
+            LSR
+        REPEND
+    ENDM
+
+    MAC LDEXPAND
+        LDX {1}
+        LDA expandTable,X
+    ENDM
+
+    MAC CLOCKLINE
+        STA WSYNC
+        LDA #$00        ; 2
+        STA VBLANK      ; 5
+        LDA colorLeft   ; 7
+        STA COLUBK      ; 10
+        Sleep 32
+        LDA colorRight
+        STA COLUBK
+    ENDM
+
+    MAC UNPACK
+        LDA {1}
+        LSRN 4
+        STA {1}Hi
+        LDA {1}
+        AND #$0F
+        STA {1}Lo
+    ENDM
+
+    MAC PACK
+        LDA {1}Hi
+        ASLN 4
+        EOR {1}Lo
+        STA {1}
+    ENDM
+
 EDIT_MODE_COLOR = $40
 
     seg.u vars
@@ -49,13 +93,6 @@ InitComplete
 InitVariableComplete
 
 ;;; Setup TIA
-	LDA #$00
-	STA COLUBK
-	LDA #$57
-	STA COLUP0
-	LDA #$67
-	STA COLUP1
-
     LDA 20
     STA COLUPF
     LDA #$01
@@ -74,7 +111,6 @@ InitVariableComplete
     STA WSYNC
 
     Sleep 30
-
     STA RESP0
 
     Sleep 14
@@ -123,24 +159,14 @@ HourLowColorDone
     LDA #$57
     STA COLUP0
     STA COLUP1
-    LDX hoursHi
-    LDA expandTable,X
+    LDEXPAND hoursHi
     STA GRP0
-    LDX hoursLo
-    LDA expandTable,X
+    LDEXPAND hoursLo
     STA GRP1
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplayHour
-    STA WSYNC
-    LDA #$00        ; 2
-    STA VBLANK      ; 5
-    LDA colorLeft   ; 7
-    STA COLUBK      ; 10
-    Sleep 32
-    LDA colorRight
-    STA COLUBK
-
+    CLOCKLINE
     DEX
     BNE DisplayHour
 
@@ -166,11 +192,9 @@ MinuteLowColorDone
     LDA #$47
     STA COLUP0
     STA COLUP1
-    LDX minutesHi
-    LDA expandTable,X
+    LDEXPAND minutesHi
     STA GRP0
-    LDX minutesLo
-    LDA expandTable,X
+    LDEXPAND minutesLo
     STA GRP1
 
     STA WSYNC
@@ -178,15 +202,7 @@ MinuteLowColorDone
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplayMinute
-    STA WSYNC
-    LDA #$00
-    STA VBLANK      ; 5
-    LDA colorLeft   ; 7
-    STA COLUBK      ; 10
-    Sleep 32
-    LDA colorRight
-    STA COLUBK
-
+    CLOCKLINE
     DEX
     BNE DisplayMinute
 
@@ -212,11 +228,9 @@ SecondLowColorDone
     LDA #$87
     STA COLUP0
     STA COLUP1
-    LDX secondsHi
-    LDA expandTable,X
+    LDEXPAND secondsHi
     STA GRP0
-    LDX secondsLo
-    LDA expandTable,X
+    LDEXPAND secondsLo
     STA GRP1
 
     STA WSYNC
@@ -224,15 +238,7 @@ SecondLowColorDone
 
     LDX #72 ;; (228 - 3 ) / 3
 DisplaySecond
-    STA WSYNC
-    LDA #$0
-    STA VBLANK      ; 5
-    LDA colorLeft   ; 7
-    STA COLUBK      ; 10
-    Sleep 32
-    LDA colorRight
-    STA COLUBK
-
+    CLOCKLINE
     DEX
     BNE DisplaySecond
 
@@ -286,26 +292,9 @@ AdvanceClock
 ClockIncrementDone
     CLD
 
-    LDA hours
-    JSR ExtractHigherNibble
-    STA hoursHi
-    LDA hours
-    JSR ExtractLowerNibble
-    STA hoursLo
-
-    LDA minutes
-    JSR ExtractHigherNibble
-    STA minutesHi
-    LDA minutes
-    JSR ExtractLowerNibble
-    STA minutesLo
-
-    LDA seconds
-    JSR ExtractHigherNibble
-    STA secondsHi
-    LDA seconds
-    JSR ExtractLowerNibble
-    STA secondsLo
+    UNPACK hours
+    UNPACK minutes
+    UNPACK seconds
 
     LDA INPT4
     TAX
@@ -329,6 +318,7 @@ processFireEnd
 
     LDA editMode
     BEQ OverscanLogicEnd
+
     LDA SWCHA
     TAX
     EOR lastSwcha
@@ -366,29 +356,9 @@ joystickTestDownStore
 joystickTestDownEnd
     STX lastSwcha
 
-    LDA hoursHi
-    ASL
-    ASL
-    ASL
-    ASL
-    EOR hoursLo
-    STA hours
-
-    LDA minutesHi
-    ASL
-    ASL
-    ASL
-    ASL
-    EOR minutesLo
-    STA minutes
-
-    LDA secondsHi
-    ASL
-    ASL
-    ASL
-    ASL
-    EOR secondsLo
-    STA seconds
+    PACK hours
+    PACK minutes
+    PACK seconds
 
 OverscanLogicEnd
 WaitTimer
@@ -400,18 +370,6 @@ WaitTimer
     STA WSYNC
 
     JMP MainLoop
-
-ExtractLowerNibble SUBROUTINE
-    AND #$0F
-    RTS
-
-ExtractHigherNibble SUBROUTINE
-    AND #$F0
-    LSR
-    LSR
-    LSR
-    LSR
-    RTS
 
     org $FF00
 expandTable
