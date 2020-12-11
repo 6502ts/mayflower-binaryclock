@@ -40,14 +40,24 @@ InitComplete
     LDA #$50
     STA seconds
 
-;;; Setup Players
+;;; Setup TIA
 	LDA #$00
 	STA COLUBK
+    STA CTRLPF
 	LDA #$57
 	STA COLUP0
-
 	LDA #$67
 	STA COLUP1
+
+    LDA 20
+    STA COLUPF
+
+    LDA #%01010000
+    STA PF0
+    LDA #%10101010
+    STA PF1
+    LDA #%01010101
+    STA PF2
 
     LDA #$67
     STA NUSIZ0
@@ -55,12 +65,19 @@ InitComplete
 
     STA WSYNC
 
-    Sleep 36
+    Sleep 30
 
     STA RESP0
 
     Sleep 12
     STA RESP1
+
+    LDA #$10
+    STA HMP0
+    LDA #$e0
+    STA HMP1
+    STA WSYNC
+    STA HMOVE
 
 MainLoop
 
@@ -181,6 +198,8 @@ AdvanceClock
     STA hours
 
 ClockIncrementDone
+    CLD
+
     LDA hours
     JSR ExtractHigherNibble
     STA hoursHi
@@ -203,7 +222,6 @@ ClockIncrementDone
     STA secondsLo
 
 OverscanLogicEnd
-    CLD
 WaitTimer
     LDA INTIM
     BNE WaitTimer
