@@ -98,7 +98,7 @@ MainLoop
     LDA #0
     STA VSYNC
 
-    LDX #45 ;; 48 - 3
+    LDX #44 ;; 47 - 3
     LDA #$02
     STA VBLANK
 VBankLoop
@@ -107,7 +107,21 @@ VBankLoop
     BNE VBankLoop
 
     LDA #$00
+    STA COLUBK
+
+    LDA #1
+    CMP editMode
+    BNE hourNotSelected
+
+    LDA #$40
+    STA COLUBK
+hourNotSelected
+
+    STA WSYNC
+
+    LDA #$00
     STA VBLANK
+
 
     LDA #$57
     STA COLUP0
@@ -123,6 +137,20 @@ DisplayHour
     DEX
     BNE DisplayHour
 
+    LDA #$02
+    STA VBLANK
+
+    LDA #$00
+    STA COLUBK
+
+    LDA #2
+    CMP editMode
+    BNE minuteNotSelected
+
+    LDA #$40
+    STA COLUBK
+minuteNotSelected
+
     LDA #$47
     STA COLUP0
     STA COLUP1
@@ -131,8 +159,6 @@ DisplayHour
     LDA minutesLo
     STA GRP1
 
-    LDA #$02
-    STA VBLANK
     STA WSYNC
     STA WSYNC
     STA WSYNC
@@ -145,6 +171,20 @@ DisplayMinute
     DEX
     BNE DisplayMinute
 
+    LDA #$02
+    STA VBLANK
+
+    LDA #$00
+    STA COLUBK
+
+    LDA #3
+    CMP editMode
+    BNE secondNotSelected
+
+    LDA #$40
+    STA COLUBK
+secondNotSelected
+
     LDA #$87
     STA COLUP0
     STA COLUP1
@@ -153,8 +193,6 @@ DisplayMinute
     LDA secondsLo
     STA GRP1
 
-    LDA #$02
-    STA VBLANK
     STA WSYNC
     STA WSYNC
     STA WSYNC
