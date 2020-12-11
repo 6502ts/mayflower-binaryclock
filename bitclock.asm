@@ -374,6 +374,22 @@ joystickTestDownStore
 joystickTestDownEnd
     STX lastSwcha
 
+    LDA hoursHi
+    CMP #$03
+    BCC hoursHiOverflowCheckDone
+    LDA #$0
+    STA hoursHi
+hoursHiOverflowCheckDone
+
+    CMP #$02
+    BNE hoursLoOverflowCheckDone
+    LDA hoursLo
+    CMP #$05
+    BCC hoursLoOverflowCheckDone
+    LDA #$0
+    STA hoursLo
+hoursLoOverflowCheckDone
+
     PACK hours
     PACK minutes
     PACK seconds
