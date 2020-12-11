@@ -2,6 +2,8 @@
 	include vcs.h
 	include macro.h
 
+EDIT_MODE_COLOR = $40
+
     seg.u vars
     org $80
 hours   DS.B 1
@@ -113,7 +115,7 @@ VBankLoop
     CMP editMode
     BNE hourNotSelected
 
-    LDA #$40
+    LDA #EDIT_MODE_COLOR
     STA COLUBK
 hourNotSelected
 
@@ -147,7 +149,7 @@ DisplayHour
     CMP editMode
     BNE minuteNotSelected
 
-    LDA #$40
+    LDA #EDIT_MODE_COLOR
     STA COLUBK
 minuteNotSelected
 
@@ -181,7 +183,7 @@ DisplayMinute
     CMP editMode
     BNE secondNotSelected
 
-    LDA #$40
+    LDA #EDIT_MODE_COLOR
     STA COLUBK
 secondNotSelected
 
