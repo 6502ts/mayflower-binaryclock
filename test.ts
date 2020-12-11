@@ -62,13 +62,16 @@ suite('binclock', () => {
             [0x27, 21],
             [0x18, 64],
             [0x09, 65],
-        ].forEach(([x, y]) =>
-            test(`0x${x.toString(16).padStart(2, '0')} -> 0b${y.toString(2).padStart(8, '0')}`, () => {
-                runner.boot().cld().jumpTo('ExtractLowerNibble');
-                runner.getBoard().getCpu().state.a = x;
-                runner.runUntil(() => runner.hasReachedLabel('ExtractLowerNibbleEnd'));
+        ].forEach(([input, expectation]) =>
+            test(`0x${input.toString(16).padStart(2, '0')} -> 0b${expectation.toString(2).padStart(8, '0')}`, () => {
+                runner
+                    .boot()
+                    .cld()
+                    .jumpTo('ExtractLowerNibble')
+                    .modifyCpuState(() => ({ a: input }))
+                    .runToRts();
 
-                assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+                assert.strictEqual(runner.getCpuState().a, expectation);
             })
         )
     );
@@ -85,13 +88,16 @@ suite('binclock', () => {
             [0x72, 21],
             [0x81, 64],
             [0x90, 65],
-        ].forEach(([x, y]) =>
-            test(`0x${x.toString(16).padStart(2, '0')} -> 0b${y.toString(2).padStart(8, '0')}`, () => {
-                runner.boot().cld().jumpTo('ExtractHigherNibble');
-                runner.getBoard().getCpu().state.a = x;
-                runner.runUntil(() => runner.hasReachedLabel('ExtractHigherNibbleEnd'));
+        ].forEach(([input, expectation]) =>
+            test(`0x${input.toString(16).padStart(2, '0')} -> 0b${expectation.toString(2).padStart(8, '0')}`, () => {
+                runner
+                    .boot()
+                    .cld()
+                    .jumpTo('ExtractHigherNibble')
+                    .modifyCpuState(() => ({ a: input }))
+                    .runToRts();
 
-                assert.strictEqual(runner.getBoard().getCpu().state.a, y);
+                assert.strictEqual(runner.getCpuState().a, expectation);
             })
         )
     );

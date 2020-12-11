@@ -217,7 +217,6 @@ ExtractLowerNibble SUBROUTINE
     AND #$0F
     TAY
     LDA expandTable,Y
-ExtractLowerNibbleEnd
     RTS
 
 ExtractHigherNibble SUBROUTINE
@@ -228,7 +227,6 @@ ExtractHigherNibble SUBROUTINE
     LSR
     TAY
     LDA expandTable,Y
-ExtractHigherNibbleEnd
     RTS
 
     org $FF00
