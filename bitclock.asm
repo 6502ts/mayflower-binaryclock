@@ -19,7 +19,9 @@
         LDA expandTable,X
     ENDM
 
-    MAC CLOCKLINE
+    MAC CLOCK_BLOCK
+        LDX #72 ;; (228 - 3 ) / 3 - 3
+.display
         STA WSYNC
         LDA #$00        ; 2
         STA VBLANK      ; 5
@@ -28,6 +30,9 @@
         Sleep 32
         LDA colorRight
         STA COLUBK
+
+        DEX
+        BNE .display
     ENDM
 
     MAC UNPACK
@@ -58,6 +63,32 @@
         LDA #$0
         STA {1}
 .overflowCheckDone
+    ENDM
+
+    MAC SETUP_CURSOR
+        LDA #$00
+        STA colorLeft
+        STA colorRight
+
+        LDX #EDIT_MODE_COLOR
+        LDA editMode
+        CMP #{1}
+        BNE .cursorLeftDone
+        STX colorLeft
+.cursorLeftDone
+        CMP #({1} + 1)
+        BNE .cursorRightDone
+        STX colorRight
+.cursorRightDone
+    ENDM
+
+    MAC SETUP_DIGITS
+        STA COLUP0
+        STA COLUP1
+        LDEXPAND {1}Hi
+        STA GRP0
+        LDEXPAND {1}Lo
+        STA GRP1
     ENDM
 
 EDIT_MODE_COLOR = $40
@@ -162,115 +193,49 @@ VBankLoop
     BNE VBankLoop
 
 ; LINES: 47
+; ================ HOURS ================
 
-    LDA #$00
-    STA colorLeft
-    STA colorRight
-
-    LDX #EDIT_MODE_COLOR
-    LDA editMode
-    CMP #$0
-    BNE HoursLeftColorDone
-    STX colorLeft
-HoursLeftColorDone
-    CMP #$1
-    BNE HoursRightColorDone
-    STX colorRight
-HoursRightColorDone
-
+    SETUP_CURSOR 0
     LDA #$57
-    STA COLUP0
-    STA COLUP1
-    LDEXPAND hoursHi
-    STA GRP0
-    LDEXPAND hoursLo
-    STA GRP1
+    SETUP_DIGITS hours
 
-    LDX #72 ;; (228 - 3 ) / 3 - 3
-DisplayHour
-    CLOCKLINE
-    DEX
-    BNE DisplayHour
+    CLOCK_BLOCK
 
 ; LINES: 119
+; =============== MINUTES ===============
 
     STA WSYNC
     LDA #$02
     STA VBLANK
 
-    LDA #$00
-    STA colorLeft
-    STA colorRight
-
-    LDX #EDIT_MODE_COLOR
-    LDA editMode
-    CMP #$2
-    BNE MinutesLeftColorDone
-    STX colorLeft
-MinutesLeftColorDone
-    CMP #$3
-    BNE MinutesRightColorDone
-    STX colorRight
-MinutesRightColorDone
-
+    SETUP_CURSOR 2
     LDA #$47
-    STA COLUP0
-    STA COLUP1
-    LDEXPAND minutesHi
-    STA GRP0
-    LDEXPAND minutesLo
-    STA GRP1
+    SETUP_DIGITS minutes
 
     STA WSYNC
     STA WSYNC
 
 ; LINES : 122
 
-    LDX #72 ;; (228 - 3 ) / 3 - 3
-DisplayMinute
-    CLOCKLINE
-    DEX
-    BNE DisplayMinute
+    CLOCK_BLOCK
 
 ; LINES : 194
+; =============== SECONDS ===============
 
     STA WSYNC
     LDA #$02
     STA VBLANK
 
-    LDA #$00
-    STA colorLeft
-    STA colorRight
-
-    LDX #EDIT_MODE_COLOR
-    LDA editMode
-    CMP #$4
-    BNE SeconsLeftColorDone
-    STX colorLeft
-SeconsLeftColorDone
-    CMP #$5
-    BNE SecondsRightColorDone
-    STX colorRight
-SecondsRightColorDone
-
+    SETUP_CURSOR 4
     LDA #$87
-    STA COLUP0
-    STA COLUP1
-    LDEXPAND secondsHi
-    STA GRP0
-    LDEXPAND secondsLo
-    STA GRP1
+    SETUP_DIGITS seconds
 
     STA WSYNC
     STA WSYNC
 
 ; LINES : 197
 
-    LDX #72 ;; (228 - 3 ) / 3 - 3
-DisplaySecond
-    CLOCKLINE
-    DEX
-    BNE DisplaySecond
+    CLOCK_BLOCK
 
 ; LINES : 269
 
