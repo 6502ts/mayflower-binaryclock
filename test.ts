@@ -121,7 +121,7 @@ suite('binclock', () => {
         assert.strictEqual(runner.readMemoryAt('frames'), 49);
     });
 
-    test('pressing fire toggles edit mode', () => {
+    test('pressing fire cycles edit mode', () => {
         runner.runTo('OverscanLogicStart');
 
         runner.getBoard().getJoystick0().getFire().toggle(true);
@@ -131,6 +131,22 @@ suite('binclock', () => {
         runner.getBoard().getJoystick0().getFire().toggle(false);
         runner.runTo('OverscanLogicStart');
         assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+
+        runner.getBoard().getJoystick0().getFire().toggle(true);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 2);
+
+        runner.getBoard().getJoystick0().getFire().toggle(false);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 2);
+
+        runner.getBoard().getJoystick0().getFire().toggle(true);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 3);
+
+        runner.getBoard().getJoystick0().getFire().toggle(false);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 3);
 
         runner.getBoard().getJoystick0().getFire().toggle(true);
         runner.runTo('OverscanLogicStart');

@@ -247,7 +247,12 @@ ClockIncrementDone
     AND scratch
     BPL processFireEnd
     LDA editMode
-    EOR #1
+    CLC
+    ADC #1
+    CMP #4
+    BNE toggleEditModeDone
+    LDA #0
+toggleEditModeDone
     STA editMode
 processFireEnd
     STX lastInpt4
@@ -264,22 +269,24 @@ processFireEnd
     STA scratch
     SED
 joystickTestUp
+    LDY editMode
+    DEY
     LDA #$10
     BIT scratch
     BEQ joystickTestUpEnd
-    LDA hours
+    LDA hours,Y
     CLC
     ADC #1
-    STA hours
+    STA hours,Y
 joystickTestUpEnd
 joystickTestDown
     LDA #$20
     BIT scratch
     BEQ joystickTestDownEnd
-    LDA hours
+    LDA hours,Y
     SEC
     SBC #1
-    STA hours
+    STA hours,Y
 joystickTestDownEnd
     CLD
     STX lastSwcha
