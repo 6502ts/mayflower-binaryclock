@@ -42,7 +42,7 @@ suite('binclock', () => {
             .writeMemoryAt('minutes', 0x59)
             .writeMemoryAt('seconds', 0x59)
             .writeMemoryAt('frames', 49)
-            .writeMemoryAt('editMode', 0)
+            .writeMemoryAt('editMode', 0x80)
             .runUntil(() => runner.hasReachedLabel('ClockIncrementDone'));
 
         assert.strictEqual(runner.readMemoryAt('hours'), 0);
@@ -50,58 +50,6 @@ suite('binclock', () => {
         assert.strictEqual(runner.readMemoryAt('seconds'), 0);
         assert.strictEqual(runner.readMemoryAt('frames'), 0);
     });
-
-    suite('extract lower nibble from BCD', () =>
-        [
-            [0x90, 0],
-            [0x81, 1],
-            [0x72, 4],
-            [0x63, 5],
-            [0x54, 16],
-            [0x45, 17],
-            [0x36, 20],
-            [0x27, 21],
-            [0x18, 64],
-            [0x09, 65],
-        ].forEach(([input, expectation]) =>
-            test(`0x${input.toString(16).padStart(2, '0')} -> 0b${expectation.toString(2).padStart(8, '0')}`, () => {
-                runner
-                    .boot()
-                    .cld()
-                    .jumpTo('ExtractLowerNibble')
-                    .modifyCpuState(() => ({ a: input }))
-                    .runToRts();
-
-                assert.strictEqual(runner.getCpuState().a, expectation);
-            })
-        )
-    );
-
-    suite('extract higher nibble from BCD', () =>
-        [
-            [0x09, 0],
-            [0x18, 1],
-            [0x27, 4],
-            [0x36, 5],
-            [0x45, 16],
-            [0x54, 17],
-            [0x63, 20],
-            [0x72, 21],
-            [0x81, 64],
-            [0x90, 65],
-        ].forEach(([input, expectation]) =>
-            test(`0x${input.toString(16).padStart(2, '0')} -> 0b${expectation.toString(2).padStart(8, '0')}`, () => {
-                runner
-                    .boot()
-                    .cld()
-                    .jumpTo('ExtractHigherNibble')
-                    .modifyCpuState(() => ({ a: input }))
-                    .runToRts();
-
-                assert.strictEqual(runner.getCpuState().a, expectation);
-            })
-        )
-    );
 
     test('clock is halted in edit mode', () => {
         runner
@@ -121,40 +69,24 @@ suite('binclock', () => {
         assert.strictEqual(runner.readMemoryAt('frames'), 49);
     });
 
-    test('pressing fire cycles edit mode', () => {
-        runner.runTo('OverscanLogicStart');
+    test('pressing fire toggles edit mode bit 7', () => {
+        runner.runTo('OverscanLogicStart').writeMemoryAt('editMode', 0x01);
 
         runner.getBoard().getJoystick0().getFire().toggle(true);
         runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0x81);
 
         runner.getBoard().getJoystick0().getFire().toggle(false);
         runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0x81);
 
         runner.getBoard().getJoystick0().getFire().toggle(true);
         runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 2);
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0x01);
 
         runner.getBoard().getJoystick0().getFire().toggle(false);
         runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 2);
-
-        runner.getBoard().getJoystick0().getFire().toggle(true);
-        runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 3);
-
-        runner.getBoard().getJoystick0().getFire().toggle(false);
-        runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 3);
-
-        runner.getBoard().getJoystick0().getFire().toggle(true);
-        runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 0);
-
-        runner.getBoard().getJoystick0().getFire().toggle(false);
-        runner.runTo('OverscanLogicStart');
-        assert.strictEqual(runner.readMemoryAt('editMode'), 0);
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0x01);
     });
 
     test('frame size is 312 lines / PAL', () => {
