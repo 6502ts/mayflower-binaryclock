@@ -16,6 +16,7 @@ secondsHi DS.B 1
 secondsLo DS.B 1
 editMode  DS.B 1
 lastInpt4 DS.B 1
+lastSwcha DS.B 1
 scratch   DS.B 1
 
     seg code_main
@@ -34,8 +35,11 @@ ClearMem
 	DEX
 	BNE ClearMem
 InitComplete
-    LDA #$80
+    LDA INPT4
     STA lastInpt4
+    LDA SWCHA
+    STA lastSwcha
+InitVariableComplete
 
 ;;; Setup time
     LDA #$23
@@ -241,12 +245,44 @@ ClockIncrementDone
     TXA
     EOR #$FF
     AND scratch
-    BPL processInputEnd
+    BPL processFireEnd
     LDA editMode
     EOR #1
     STA editMode
-processInputEnd
+processFireEnd
     STX lastInpt4
+    LDA editMode
+    BEQ OverscanLogicEnd
+
+    LDA SWCHA
+    TAX
+    EOR lastSwcha
+    STA scratch
+    TXA
+    EOR #$FF
+    AND scratch
+    STA scratch
+    SED
+joystickTestUp
+    LDA #$10
+    BIT scratch
+    BEQ joystickTestUpEnd
+    LDA hours
+    CLC
+    ADC #1
+    STA hours
+joystickTestUpEnd
+joystickTestDown
+    LDA #$20
+    BIT scratch
+    BEQ joystickTestDownEnd
+    LDA hours
+    SEC
+    SBC #1
+    STA hours
+joystickTestDownEnd
+    CLD
+    STX lastSwcha
 
 OverscanLogicEnd
 WaitTimer
