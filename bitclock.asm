@@ -15,7 +15,8 @@ minutesLo DS.B 1
 secondsHi DS.B 1
 secondsLo DS.B 1
 editMode  DS.B 1
-lastInpt4 DS.b 1
+lastInpt4 DS.B 1
+scratch   DS.B 1
 
     seg code_main
     org $F000
@@ -236,13 +237,15 @@ ClockIncrementDone
     LDA INPT4
     TAX
     EOR lastInpt4
-    BPL lala
+    STA scratch
     TXA
-    BMI lala
+    EOR #$FF
+    AND scratch
+    BPL processInputEnd
     LDA editMode
     EOR #1
     STA editMode
-lala
+processInputEnd
     STX lastInpt4
 
 OverscanLogicEnd

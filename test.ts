@@ -123,10 +123,22 @@ suite('binclock', () => {
 
     test('pressing fire toggles edit mode', () => {
         runner.runTo('OverscanLogicStart');
+
         runner.getBoard().getJoystick0().getFire().toggle(true);
         runner.runTo('OverscanLogicStart');
-
         assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+
+        runner.getBoard().getJoystick0().getFire().toggle(false);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 1);
+
+        runner.getBoard().getJoystick0().getFire().toggle(true);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0);
+
+        runner.getBoard().getJoystick0().getFire().toggle(false);
+        runner.runTo('OverscanLogicStart');
+        assert.strictEqual(runner.readMemoryAt('editMode'), 0);
     });
 
     test('frame size is 312 lines / PAL', () => {
