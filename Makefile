@@ -20,6 +20,7 @@ debug: all
 	stella -debug $(BINARIES)
 
 test:
+	$(YARN) install
 	$(YARN) test
 
 %.bin : %.asm $(INCLUDE)
