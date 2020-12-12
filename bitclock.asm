@@ -2,118 +2,8 @@
 	include vcs.h
 	include macro.h
 
-    MAC ASLN
-        REPEAT {1}
-            ASL
-        REPEND
-    ENDM
-
-    MAC LSRN
-        REPEAT {1}
-            LSR
-        REPEND
-    ENDM
-
-    MAC LDEXPAND
-        LDX {1}
-        LDA expandTable,X
-    ENDM
-
-    MAC CLOCK_BLOCK
-        LDX #72 ;; (228 - 3 ) / 3 - 3
-.display
-        STA WSYNC
-        LDA #$00        ; 2
-        STA VBLANK      ; 5
-        LDA colorLeft   ; 7
-        STA COLUBK      ; 10
-        Sleep 32
-        LDA colorRight
-        STA COLUBK
-
-        DEX
-        BNE .display
-    ENDM
-
-    MAC UNPACK
-        LDA {1}
-        LSRN 4
-        STA {1}Hi
-        LDA {1}
-        AND #$0F
-        STA {1}Lo
-    ENDM
-
-    MAC PACK
-        LDA {1}Hi
-        ASLN 4
-        EOR {1}Lo
-        STA {1}
-    ENDM
-
-    MAC CONSTRAIN_BCD
-        LDA {1}
-        CMP #$09
-        BNE .underflowCheckDone
-        LDA #{2}
-        STA {1}
-.underflowCheckDone
-        CMP #({2} + 1)
-        BCC .overflowCheckDone
-        LDA #$0
-        STA {1}
-.overflowCheckDone
-    ENDM
-
-    MAC SETUP_CURSOR
-        LDA #$00
-        STA colorLeft
-        STA colorRight
-
-        LDX #EDIT_MODE_COLOR
-        LDA editMode
-        CMP #{1}
-        BNE .cursorLeftDone
-        STX colorLeft
-.cursorLeftDone
-        CMP #({1} + 1)
-        BNE .cursorRightDone
-        STX colorRight
-.cursorRightDone
-    ENDM
-
-    MAC SETUP_DIGITS
-        STA COLUP0
-        STA COLUP1
-        LDEXPAND {1}Hi
-        STA GRP0
-        LDEXPAND {1}Lo
-        STA GRP1
-    ENDM
-
-EDIT_MODE_COLOR = $40
-
-    seg.u vars
-    org $80
-hours   DS.B 1
-minutes DS.B 1
-seconds DS.B 1
-frames  DS.B 1
-
-timeBcDStart
-hoursHi   DS.B 1
-hoursLo   DS.B 1
-minutesHi DS.B 1
-minutesLo DS.B 1
-secondsHi DS.B 1
-secondsLo DS.B 1
-
-editMode  DS.B 1
-lastInpt4 DS.B 1
-lastSwcha DS.B 1
-scratch   DS.B 1
-colorLeft DS.B 1
-colorRight DS.B 1
+    include bitclock_macros.h
+    include variables.h
 
     seg code_main
     org $F000
@@ -406,19 +296,7 @@ WaitTimer
 
     JMP MainLoop
 
-    org $FF00
-expandTable
-    DC.B #%00000000
-    DC.B #%00000001
-    DC.B #%00000100
-    DC.B #%00000101
-    DC.B #%00010000
-    DC.B #%00010001
-    DC.B #%00010100
-    DC.B #%00010101
-    DC.B #%01000000
-    DC.B #%01000001
-
+    include constants.h
 
     org $FFFC
 	.word Start

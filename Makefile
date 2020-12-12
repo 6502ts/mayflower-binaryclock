@@ -1,7 +1,7 @@
 SOURCE = bitclock.asm
 BINARIES = bitclock.bin
 
-INCLUDE =
+INCLUDE = macro.h vcs.h bitclock_macros.h constants.h variables.h
 
 DASM ?= dasm
 DASM_OPTS = -I.. -f3 $(DASM_EXTRA_OPTS)
